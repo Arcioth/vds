@@ -1,6 +1,23 @@
-# VDH Replica
+<p align="center">
+  <img src="icons/icon128.png" alt="VDH Replica" width="128">
+</p>
 
-A clean, privacy-focused Chrome/Chromium extension that detects video content from browser tabs and provides download and copy functionality. Supports HLS (.m3u8) streams, .mp4, .mkv, .mov, and other video formats.
+<h1 align="center">VDH Replica</h1>
+
+<p align="center">
+  A clean, privacy-focused Chrome/Chromium extension that detects video content from browser tabs and provides download and copy functionality.
+</p>
+
+<p align="center">
+  <a href="../../releases/tag/v1.0.0"><img src="https://img.shields.io/badge/version-1.0.0-blue?style=flat-square" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
+  <a href="https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3"><img src="https://img.shields.io/badge/manifest-v3-orange?style=flat-square" alt="Manifest V3"></a>
+  <a href="PRIVACY.md"><img src="https://img.shields.io/badge/data_collected-none-brightgreen?style=flat-square" alt="Privacy"></a>
+</p>
+
+---
+
+Supports HLS (.m3u8) streams, .mp4, .mkv, .mov, and other video formats.
 
 ## Features
 
