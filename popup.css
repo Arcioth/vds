@@ -1,0 +1,292 @@
+/* --- THEME VARIABLES --- */
+:root {
+    /* Palette - Neutral (Slate) */
+    --neutral-50: #f8fafc;
+    --neutral-100: #f1f5f9;
+    --neutral-200: #e2e8f0;
+    --neutral-300: #cbd5e1;
+    --neutral-400: #94a3b8;
+    --neutral-500: #64748b;
+    --neutral-600: #475569;
+    --neutral-700: #334155;
+    --neutral-800: #1e293b;
+    --neutral-900: #0f172a;
+    --neutral-950: #020617;
+
+    /* Palette - Accents */
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --red-500: #ef4444;
+    --green-500: #22c55e;
+    --yellow-500: #eab308; /* For HLS/m3u8 */
+
+    /* Dimensions */
+    --spacing-small: 4px;
+    --spacing-medium: 8px;
+    --spacing-large: 16px;
+    --video-height: 80px;
+}
+
+/* --- LAYOUT ENGINE (Emulating vbox/hbox) --- */
+vbox, hbox {
+    display: flex;
+    box-sizing: border-box;
+}
+
+vbox { flex-direction: column; }
+hbox { flex-direction: row; }
+
+/* Flex attributes mapping */
+[flex="1"] { flex: 1; }
+[pack="end"] { justify-content: flex-end; }
+[pack="center"] { justify-content: center; }
+[xalign="center"] { align-items: center; }
+
+spacer { flex-grow: 1; }
+
+/* --- COMPONENT STYLES --- */
+body {
+    margin: 0;
+    padding: 0;
+    width: 500px;
+    height: 600px;
+    font-family: 'JetBrains Mono', 'Segoe UI', monospace;
+    font-size: 13px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    overflow: hidden;
+}
+
+/* Theme Handling */
+html[theme="light"] {
+    --bg-color: var(--neutral-50);
+    --text-color: var(--neutral-800);
+    --panel-bg: white;
+    --border-color: var(--neutral-200);
+    --hover-bg: var(--neutral-100);
+}
+
+html[theme="dark"] {
+    --bg-color: var(--neutral-950); /* Deeper dark */
+    --text-color: var(--neutral-200);
+    --panel-bg: var(--neutral-900);
+    --border-color: var(--neutral-800);
+    --hover-bg: var(--neutral-800);
+}
+
+/* Main Container */
+#app {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Headers */
+h1, h2, h3 { 
+    margin: 0; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+}
+h2 { font-size: 1.1em; padding: var(--spacing-medium); }
+
+/* Media List Area */
+#media { 
+    overflow-y: auto; 
+    flex: 1;
+    min-height: 0; 
+    padding-bottom: 10px;
+}
+
+/* Custom Scrollbar */
+#media::-webkit-scrollbar { width: 8px; }
+#media::-webkit-scrollbar-track { background: var(--bg-color); }
+#media::-webkit-scrollbar-thumb { background-color: var(--neutral-600); border-radius: 4px; }
+
+.media-item {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin: var(--spacing-medium) var(--spacing-medium) 0 var(--spacing-medium);
+    padding: var(--spacing-medium);
+    height: var(--video-height);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.media-item:hover {
+    border-color: var(--blue-500);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.media-thumb {
+    width: 80px;
+    height: 100%;
+    background-color: black;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    margin-right: var(--spacing-medium);
+}
+
+/* HLS Special Styling */
+.media-item.type-hls .media-thumb {
+    background-color: var(--neutral-800);
+    color: var(--yellow-500);
+    border: 1px solid var(--yellow-500);
+}
+
+.media-title { font-weight: bold; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+.media-info { font-size: 0.8em; opacity: 0.7; }
+
+/* Buttons & Feedback */
+button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: inherit;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+button:hover { 
+    background-color: var(--hover-bg); 
+    transform: translateY(-1px);
+}
+
+button:active { 
+    transform: translateY(0) scale(0.96); 
+}
+
+button.primary { 
+    background-color: var(--blue-600); 
+    color: white; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+button.primary:hover {
+    background-color: var(--blue-500);
+}
+
+button.secondary { 
+    background-color: var(--panel-bg); 
+    color: var(--text-color); 
+    border: 1px solid var(--border-color); 
+}
+button.icon-btn { padding: 8px; border-radius: 50%; }
+
+/* Toolbar */
+#toolbar {
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-medium);
+    background-color: var(--panel-bg);
+    flex-shrink: 0;
+}
+
+/* --- ANIMATIONS & VIEWS --- */
+#settings {
+    display: flex;
+    background-color: var(--bg-color);
+    position: absolute;
+    top: 0;
+    left: 100%; /* Start off-screen */
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#settings.active {
+    left: 0;
+}
+
+#main {
+    transition: opacity 0.2s ease;
+}
+
+#settings.active ~ #main {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.settings-header {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-content { overflow-y: auto; flex: 1; }
+
+.setting-row {
+    padding: var(--spacing-medium) var(--spacing-large);
+    border-bottom: 1px solid var(--border-color);
+    min-height: 40px;
+}
+
+.setting-group-title {
+    padding: var(--spacing-large) var(--spacing-large) var(--spacing-small);
+    color: var(--blue-500);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+/* Input Elements */
+input[type="checkbox"] {
+    accent-color: var(--blue-600);
+    width: 16px;
+    height: 16px;
+}
+
+select {
+    padding: 4px;
+    background: var(--panel-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.badge {
+    background-color: var(--blue-600);
+    color: white;
+    font-size: 0.7em;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+
+#nomedia {
+    display: none; 
+    padding: 40px; 
+    opacity: 0.5;
+}
+
+/* About Links */
+.about-link {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.about-link:hover {
+    background-color: var(--hover-bg);
+}
+.about-value {
+    opacity: 0.6;
+    font-size: 0.9em;
+}
+.about-arrow {
+    opacity: 0.4;
+    font-size: 0.9em;
+}

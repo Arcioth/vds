@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDH Replica</title>
+    <!-- Custom Font: JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Link to our separate stylesheet -->
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+    <div id="app">
+        
+        <!-- === MAIN VIEW === -->
+        <vbox id="main" flex="1">
+            
+            <!-- Notification Area -->
+            <vbox id="notification-container-top"></vbox>
+
+            <!-- Media List Container -->
+            <vbox id="media" flex="1">
+                <!-- Content injected by popup.js -->
+            </vbox>
+
+            <!-- Empty State -->
+            <vbox id="nomedia" pack="center" xalign="center">
+                <div style="font-size: 40px; margin-bottom: 10px;">📹</div>
+                <div>No media detected</div>
+            </vbox>
+
+            <!-- Bottom Toolbar -->
+            <hbox id="toolbar" xalign="center">
+                <button id="button_help" class="icon-btn" title="Help">❓</button>
+                <spacer></spacer>
+                <button id="button_settings" class="icon-btn" title="Settings">⚙️</button>
+            </hbox>
+        </vbox>
+
+
+        <!-- === SETTINGS VIEW === -->
+        <vbox id="settings" flex="1">
+            <!-- Settings Header -->
+            <hbox xalign="center" class="settings-header">
+                <button id="button_back_settings" class="icon-btn">←</button>
+                <h2>Settings</h2>
+            </hbox>
+
+            <vbox class="settings-content">
+                
+                <!-- Appearance Section -->
+                <div class="setting-group-title">Appearance</div>
+                
+                <hbox class="setting-row" xalign="center">
+                    <span>Theme</span>
+                    <spacer></spacer>
+                    <select id="s_theme_select">
+                        <option value="system">System</option>
+                        <option value="light">Light</option>
+                        <option value="dark" selected>Dark</option>
+                    </select>
+                </hbox>
+
+                <!-- Smart Naming Section -->
+                <div class="setting-group-title">Smart Naming</div>
+                
+                <hbox class="setting-row" xalign="center">
+                    <label>Pattern</label>
+                    <spacer></spacer>
+                    <input type="text" id="s_naming_pattern" placeholder="[original]" style="width: 160px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--panel-bg); color: var(--text-color);">
+                </hbox>
+                <div style="padding: 0 16px 8px; font-size: 0.75em; opacity: 0.7; line-height: 1.4;">
+                    Tags: <b>[title]</b> (Page Title), <b>[original]</b> (URL Name), <b>[date]</b>, <b>[ext]</b>
+                </div>
+
+                <!-- HLS Section -->
+                <div class="setting-group-title">HLS / Streams</div>
+
+                <hbox class="setting-row" xalign="center">
+                    <label for="s_hls_action">HLS Action (Manual Click)</label>
+                    <spacer></spacer>
+                    <select id="s_hls_action">
+                        <option value="ask">Show All Options</option>
+                        <option value="copy">Auto-Copy Command</option>
+                        <option value="download">Download Playlist</option>
+                    </select>
+                </hbox>
+
+                <hbox class="setting-row" xalign="center">
+                    <label for="s_hls_autodownload">Auto-Download Detected HLS</label>
+                    <spacer></spacer>
+                    <input type="checkbox" id="s_hls_autodownload">
+                </hbox>
+
+                <!-- Udemy Autoskip Section -->
+                <div class="setting-group-title">Udemy</div>
+
+                <hbox class="setting-row" xalign="center">
+                    <label for="s_autoskip">Autoskip (next lesson after download)</label>
+                    <spacer></spacer>
+                    <input type="checkbox" id="s_autoskip">
+                </hbox>
+
+                 <!-- Advanced Section -->
+                 <div class="setting-group-title">Advanced</div>
+
+                <hbox class="setting-row" xalign="center">
+                    <label for="s_checkbox_concurrent">Concurrent Downloads</label>
+                    <spacer></spacer>
+                    <input type="checkbox" id="s_checkbox_concurrent" checked>
+                </hbox>
+
+                <!-- About Section -->
+                <div class="setting-group-title">About</div>
+
+                <hbox class="setting-row about-link" xalign="center" id="about_version">
+                    <span>Version</span>
+                    <spacer></spacer>
+                    <span class="about-value">1.0.0</span>
+                </hbox>
+
+                <hbox class="setting-row about-link" xalign="center" id="about_developer">
+                    <span>Developer</span>
+                    <spacer></spacer>
+                    <span class="about-value">Arcioth</span>
+                </hbox>
+
+                <hbox class="setting-row about-link" xalign="center" id="about_privacy">
+                    <span>Privacy Policy</span>
+                    <spacer></spacer>
+                    <span class="about-arrow">→</span>
+                </hbox>
+
+                <hbox class="setting-row about-link" xalign="center" id="about_help">
+                    <span>Help & Documentation</span>
+                    <spacer></spacer>
+                    <span class="about-arrow">→</span>
+                </hbox>
+
+            </vbox>
+        </vbox>
+
+    </div>
+
+    <!-- Link to our separate logic script -->
+    <script src="popup.js"></script>
+</body>
+</html>

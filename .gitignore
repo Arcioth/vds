@@ -1,0 +1,11 @@
+# Release artifacts
+*.zip
+
+# Development files
+prompt.md
+vds-release/
+example/
+
+# OS files
+.DS_Store
+Thumbs.db

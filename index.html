@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3U8 Özel İsimlendirici</title>
+    <!-- JSZip Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --panel-bg: #313244;
+            --text-color: #cdd6f4;
+            --accent: #89b4fa;
+            --success: #a6e3a1;
+            --error: #f38ba8;
+            --border: #45475a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--panel-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 1.5rem; }
+        p { margin: 0; color: #a6adc8; font-size: 0.9rem; }
+
+        .panel {
+            background: #181825;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #1e1e2e;
+            color: #a6adc8;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            background-color: var(--border);
+        }
+
+        #fileInput { display: none; }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .list-preview {
+            background: #11111b;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .preview-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #313244;
+        }
+        
+        .preview-item:last-child { border-bottom: none; }
+        .arrow { color: var(--accent); font-weight: bold; }
+        .original-name { color: #f38ba8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .new-name { color: var(--success); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        button {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: var(--border); color: #a6adc8; cursor: not-allowed; }
+
+        .status-text {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>M3U8 Özel Bölüm İsimlendirici</h1>
+        <p>Dosyalarınız değiştirilme tarihine göre sıralanır ve sol taraftaki listeye göre yeniden adlandırılır.</p>
+    </div>
+
+    <div class="panel">
+        <h3>1. Bölüm Listesi</h3>
+        <textarea id="listInput" spellcheck="false">Oynat
+1. Kursu daha ucuza almak için bu videoyu izleyin
+1 dak
+Oynat
+2. AC Devre Analizi (Giriş)
+4 dak
+Oynat
+3. Sinüzoidler - genlik, periyot, frekans, açısal frekans
+5 dak
+Oynat
+4. Faz farkı nedir, faz açısı nasıl hesaplanır?
+10 dak
+Oynat
+5. Faz Kayması ve Gecikme Soru Çözümü-1
+10 dak
+Oynat
+6. Faz Kayması ve Gecikme Soru Çözümü-2
+12 dak
+Oynat
+7. Faz Kayması ve Gecikme Soru Çözümü-3
+16 dak
+Oynat
+8. Zaman Domeninden Frekans Domenine Geçiş - matematiksel altyapı
+43 dak
+Oynat
+9. Zaman Domeninde AC Devre Analizi - Trigonometrik Bağıntılar Yardımıyla
+15 dak
+Oynat
+10. Zaman Domeninde AC Devre Analizi - Euler Bağıntıları Yardımıyla
+15 dak
+Oynat
+11. Fazörler
+20 dak
+Oynat
+12. Karmaşık Sayılar ve Fazörlerde Dört İşlem ve Dönüşümler
+20 dak
+Oynat
+13. Direnç, Bobin ve Kondansatörün Frekans Ortamındaki Karşılıkları (Empedansları)
+17 dak
+Oynat
+14. Frekans Domeninde AC Devre Analizi - Fazörlerle
+7 dak
+Oynat
+15. Empedans ve Admitans
+6 dak
+Oynat
+16. AC Devrelerde Düğüm Gerilimleri Yöntemi (AC Nodal Analysis) Soru Çözümü-1
+14 dak
+Oynat
+17. AC Devrelerde Düğüm Gerilimleri Yöntemi (AC Nodal Analysis) Soru Çözümü-2
+13 dak
+Oynat
+18. AC Devrelerde Düğüm Gerilimleri Yöntemi (AC Nodal Analysis) Soru Çözümü-3
+15 dak
+Oynat
+19. AC Devrelerde Düğüm Gerilimleri Yöntemi (AC Nodal Analysis) Soru Çözümü-4
+7 dak
+Oynat
+20. AC Devrelerde Çevre Akımları Yöntemi (AC Mesh Analysis) Soru Çözümü-1
+7 dak
+Oynat
+21. AC Devrelerde Çevre Akımları Yöntemi (AC Mesh Analysis) Soru Çözümü-2
+20 dak
+Oynat
+22. AC Devrelerde Çevre Akımları Yöntemi (AC Mesh Analysis) Soru Çözümü-3
+16 dak
+Oynat
+23. AC Devrelerde Süperpozisyon Teoremi Soru Çözümü-1
+20 dak
+Oynat
+24. AC Devrelerde Süperpozisyon Teoremi Soru Çözümü-2
+18 dak
+Oynat
+25. AC Devrelerde Kaynak Dönüşümü Soru Çözümü-1
+11 dak
+Oynat
+26. AC Devrelerde Süperpozisyon Teoremi Soru Çözümü-2
+13 dak
+Oynat
+27. AC Devrelerde Thevenin Teoremi Soru Çözümü-1 (Sadece Bağımsız Kaynak)
+13 dak
+Oynat
+28. AC Devrelerde Thevenin Teoremi Soru Çözümü-2 (Bağımlı Kaynak Dahil Edilirse)
+18 dak
+Oynat
+29. AC Devrelerde Thevenin Teoremi Soru Çözümü-3 (Sadece Bağımlı Kaynak Olursa)
+11 dak
+Oynat
+30. AC Devrelerde Norton Teoremi Soru Çözümü
+14 dak
+Oynat
+31. AC Devrelerde Op-Amp Soru Çözümü-1
+12 dak
+Oynat
+32. AC Devrelerde Op-Amp Soru Çözümü-2
+8 dak
+Oynat
+33. AC Devrelerde Op-Amp Soru Çözümü-3 (7 elemanla bir bobin elde edebilir miyiz?)
+27 dak
+Oynat
+34. AC Devrelerde Güç
+4 dak
+Oynat
+35. Anlık Güç
+44 dak
+Oynat
+36. Ortalama Güç
+33 dak
+Oynat
+37. Ortalama Güç Soru Çözümü
+17 dak
+Oynat
+38. Etkin (rms) Değer
+18 dak
+Oynat
+39. Etkin (rms) Değer Soru Çözümü-1 (testere dişi dalganın rms değeri)
+8 dak
+Oynat
+40. Etkin (rms) Değer Soru Çözümü-2 (kare dalganın rms değeri)
+7 dak
+Oynat
+41. Etkin (rms) Değer Soru Çözümü-3 (üçgen dalganın rms değeri)
+9 dak
+Oynat
+42. Kompleks Güç | Aktif Güç, Reaktif Güç, Görünür Güç
+10 dak
+Oynat
+43. Direnç, Bobin ve Kondansatörün Kompleks Güç Formülleri
+10 dak
+Oynat
+44. Kompleks Güç Soru Çözümü-1
+18 dak
+Oynat
+45. Kompleks Güç Soru Çözümü-2
+7 dak
+Oynat
+46. Kompleks Güç Soru Çözümü-3
+15 dak
+Oynat
+47. Kompleks Güç Soru Çözümü-4
+18 dak
+Oynat
+48. Güç Faktörü (Power Factor) Nedir, Ülkemizdeki Elektrik Kurumları Nelerdir?
+10 dak
+Oynat
+49. Güç Faktörünün Önemi, Piyasadaki Durum ve İhtiyaçlar
+11 dak
+Oynat
+50. Güç Faktörünü Düzeltme (Kompanzasyon) #1 | fabrikalara verilen izin aralığı
+8 dak
+Oynat
+51. Güç Faktörünü Düzeltme (Kompanzasyon) #2 | paralel yükler
+4 dak
+Oynat
+52. Güç Faktörünü Düzeltme (Kompanzasyon) #3 | düzeltme kapasitörünün değeri
+13 dak
+Oynat
+53. Güç Faktörü (Kompanzasyon) Soru Çözümü-1
+8 dak
+Oynat
+54. Güç Faktörü (Kompanzasyon) Soru Çözümü-2
+32 dak
+Oynat
+55. Güç Faktörü (Kompanzasyon) Soru Çözümü-3
+15 dak
+Oynat
+56. Güç Faktörü (Kompanzasyon) Soru Çözümü-4
+16 dak
+Oynat
+57. Güç Faktörü (Kompanzasyon) Soru Çözümü-5
+12 dak
+Oynat
+58. Güç Faktörü (Kompanzasyon) Soru Çözümü-6
+19 dak
+Oynat
+59. AC Güç Hesaplarken Süperpozisyon Teoremi Kullanılabilir mi?
+33 dak
+Oynat
+60. AC Devrelerde Maksimum Güç Teoremi
+22 dak
+Oynat
+61. AC Devrelerde Maksimum Güç Teoremi Soru Çözümü-1
+8 dak
+Oynat
+62. AC Devrelerde Maksimum Güç Teoremi Soru Çözümü-2
+7 dak
+Oynat
+63. AC Devrelerde Maksimum Güç Teoremi Soru Çözümü-3
+6 dak
+Oynat
+64. AC Devrelerde Maksimum Güç Teoremi Soru Çözümü-4
+25 dak
+Oynat
+65. AC Devrelerde Maksimum Güç Teoremi Soru Çözümü-5
+15 dak
+Oynat
+66. Manyetik Kuplajlı Bobinler (coupled inductors) | Giriş ve Motivasyon
+9 dak
+Oynat
+67. Manyetik Alan Nasıl Oluşur?
+11 dak
+Oynat
+68. Gerilim Nasıl Endüklenir? | Faraday ve Lenz Kanunları
+7 dak
+Oynat
+69. Karşılıklı Endüktans (Mutual inductance)
+31 dak
+Oynat
+70. Kuplajlı Bobinlerde Nokta Kuralı (Dot Convention)
+30 dak
+Oynat
+71. Kuplajlı Bobin (Kuplajlı Endüktans) Eşdeğer Devre Modeli ve Kuplaj Katsayısı
+25 dak
+Oynat
+72. Manyetik Kuplajlı Devreler Soru Çözümü-1
+18 dak
+Oynat
+73. Manyetik Kuplajlı Devreler Soru Çözümü-2 (Nokta Yer Değiştirirse Ne Olur?)
+13 dak
+Oynat
+74. Manyetik Kuplajlı Devreler Soru Çözümü-3
+13 dak
+Oynat
+75. Manyetik Kuplajlı Devreler Soru Çözümü-4 (Üç Karşılıklı Endüktanslı Devre)
+18 dak
+Oynat
+76. Manyetik Kuplajlı Devreler Soru Çözümü-5
+24 dak
+Oynat
+77. Manyetik Kuplajlı Devreler Soru Çözümü-6 (Kuplajlı Bobinde Biriken Enerji)
+19 dak
+Oynat
+78. Manyetik Kuplajlı Devreler Soru Çözümü-7
+6 dak
+Oynat
+79. Manyetik Kuplajlı Devreler Soru Çözümü-8
+13 dak
+Oynat
+80. Manyetik Kuplajlı Devreler Soru Çözümü-9
+18 dak
+Oynat
+81. Lineer Transformatörde Yansıtılmış Empedans (Primere İndirgenmiş Devre)
+16 dak
+Oynat
+82. Manyetik Kuplajlı Devreler Soru Çözümü-10 (Lineer Transformatör)
+44 dak
+Oynat
+83. İdeal Transformatör
+28 dak
+Oynat
+84. İdeal Transformatörün Eşdeğer Devre Modeli
+9 dak
+Oynat
+85. İdeal Transformatör Güç Harcar mı?
+3 dak
+Oynat
+86. İdeal Transformatörün Empedans Uyumlamada Kullanımı
+13 dak
+Oynat
+87. İdeal Transformatör Soru Çözümü-1
+19 dak
+Oynat
+88. İdeal Transformatör Soru Çözümü-2
+30 dak
+Oynat
+89. İdeal Transformatör Soru Çözümü-3
+1 sa 12 dak
+Oynat
+90. İdeal Transformatör Soru Çözümü-4
+17 dak
+Oynat
+91. İdeal Transformatör Soru Çözümü-5
+12 dak
+Oynat
+92. İdeal Transformatör Soru Çözümü-6
+8 dak
+Oynat
+93. İdeal Transformatör Soru Çözümü-7
+16 dak
+Oynat
+94. İdeal Transformatör Soru Çözümü-8
+27 dak
+Oynat
+95. İdeal Transformatör Soru Çözümü-9
+4 dak
+Oynat
+96. İdeal Transformatör Soru Çözümü-10
+17 dak
+Oynat
+97. İdeal Transformatör Soru Çözümü-11
+37 dak
+Oynat
+98. İdeal Transformatör Soru Çözümü-12
+12 dak
+Oynat
+99. İdeal Transformatör Soru Çözümü-13
+45 dak
+Oynat
+100. İdeal Transformatör Soru Çözümü-14
+5 dak
+Oynat
+101. İdeal Transformatör Soru Çözümü-15
+13 dak
+Oynat
+102. Ototransformatör (Varyak) Nedir, Nasıl Çalışır, Devrede Analizi Nasıl Yapılır?
+20 dak
+Oynat
+103. Ototransformatör (Varyak) Soru Çözümü-1
+9 dak
+Oynat
+104. Ototransformatör (Varyak) Soru Çözümü-2
+5 dak
+Oynat
+105. Ototransformatör (Varyak) Soru Çözümü-3
+43 dak
+Oynat
+106. Ototransformatör (Varyak) Soru Çözümü-4
+16 dak
+Oynat
+107. Ototransformatör (Varyak) Soru Çözümü-5
+9 dak
+Oynat
+108. Üç Fazlı Devreler
+30 dak
+Oynat
+109. Dengeli Üç Fazlı Gerilimler
+38 dak
+Oynat
+110. Dengeli Üç Fazlı Yükler
+5 dak
+Oynat
+111. Dengeli Yıldız-Yıldız (Y-Y) Bağlantının Analizi
+56 dak
+Oynat
+112. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-1
+20 dak
+Oynat
+113. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-2
+9 dak
+Oynat
+114. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-3 [Dengesiz üç fazlı devre]
+16 dak
+Oynat
+115. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-4
+7 dak
+Oynat
+116. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-5
+22 dak
+Oynat
+117. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-6
+6 dak
+Oynat
+118. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-7
+22 dak
+Oynat
+119. Yıldız-Yıldız (Y-Y) Devresi Soru Çözümü-8
+25 dak
+Oynat
+120. Dengeli Yıldız-Üçgen (Y-Δ) Bağlantının Analizi
+23 dak
+Oynat
+121. Yıldız-Üçgen (Y-Δ) Devresi Soru Çözümü-1
+14 dak
+Oynat
+122. Üçgen-Yıldız Dönüşümü
+20 dak
+Oynat
+123. Yıldız-Üçgen (Y-Δ) Devresi Soru Çözümü-2
+12 dak
+Oynat
+124. Dengeli Üçgen-Üçgen (Δ-Δ) Bağlantının Analizi
+18 dak
+Oynat
+125. Üçgen-Üçgen (Δ-Δ) Devresi Soru Çözümü-1
+14 dak
+Oynat
+126. Üçgen-Üçgen (Δ-Δ) Devresi Soru Çözümü-2
+15 dak
+Oynat
+127. Üçgen-Üçgen (Δ-Δ) Devresi Soru Çözümü-3
+22 dak
+Oynat
+128. Üçgen-Üçgen (Δ-Δ) Devresi Soru Çözümü-4
+19 dak
+Oynat
+129. Dengeli Üçgen-Yıldız (Δ-Y) Bağlantının Analizi
+19 dak
+Oynat
+130. Üçgen-Yıldız (Δ-Y) Devresi Soru Çözümü-1
+14 dak
+Oynat
+131. Üçgen-Yıldız (Δ-Y) Devresi Soru Çözümü-2
+18 dak
+Oynat
+132. Üçgen-Yıldız (Δ-Y) Devresi Soru Çözümü-3
+18 dak
+Oynat
+133. Üç Fazlı Devrelerde Anlık, Ortalama ve Kompleks Güç Formüllerinin Çıkarılması
+48 dak
+Oynat
+134. Üç Fazlı Devrenin Avantajları
+23 dak
+Oynat
+135. Üç Fazlı Devrelerde Güç Soru Çözümü-1
+10 dak
+Oynat
+136. Üç Fazlı Devrelerde Güç Soru Çözümü-2
+12 dak
+Oynat
+137. Üç Fazlı Devrelerde Güç Soru Çözümü-3 (Üç Fazlı Sistemin Güç Faktörünü Düzeltme)
+39 dak
+Oynat
+138. Üç Fazlı Devrelerde Güç Soru Çözümü-4 (Dengesiz Sistem)
+22 dak
+Oynat
+139. Üç Fazlı Devrelerde Güç Soru Çözümü-5 (Dengeli Sistem)
+6 dak
+Oynat
+140. Üç Fazlı Devrelerde Güç Soru Çözümü-6
+11 dak
+Oynat
+141. Üç Fazlı Devrelerde Güç Soru Çözümü-7
+42 dak
+Oynat
+142. Üç Fazlı Devrelerde Güç Soru Çözümü-8 (Üç Fazlı Motorun Güç Faktörünü Düzeltme)
+23 dak
+Oynat
+143. Üç Fazlı Devrelerde Güç Soru Çözümü-9
+31 dak
+Oynat
+144. Üç Fazlı Transformatör
+9 dak
+Oynat
+145. Üç Fazlı Transformatör Soru Çözümü-1
+7 dak
+Oynat
+146. Üç Fazlı Transformatör Soru Çözümü-2
+7 dak
+Oynat
+147. Üç Fazlı Transformatör Soru Çözümü-3
+8 dak
+Oynat
+148. Üç Fazlı Transformatör Soru Çözümü-4
+12 dak
+Oynat
+149. Üç Fazlı Transformatör Soru Çözümü-5
+21 dak
+Oynat
+150. Üç Fazlı Transformatör Soru Çözümü-6
+25 dak</textarea>
+    </div>
+
+    <div class="panel">
+        <h3>2. M3U8 Dosyaları</h3>
+        <div class="drop-zone" id="dropZone">
+            <p><strong>.m3u8</strong> dosyalarını buraya sürükleyin<br>veya seçmek için tıklayın</p>
+            <input type="file" id="fileInput" multiple accept=".m3u8">
+        </div>
+        <div class="status-text" id="status" style="color: var(--text-color);">Henüz dosya seçilmedi.</div>
+    </div>
+
+    <div class="panel full-width">
+        <h3>3. Önizleme ve İndirme</h3>
+        <div id="preview" class="list-preview"></div>
+        <button id="processBtn" disabled>İsimlendir ve ZIP Olarak İndir</button>
+    </div>
+</div>
+
+<script>
+    const listInput = document.getElementById('listInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+    const processBtn = document.getElementById('processBtn');
+    const preview = document.getElementById('preview');
+    
+    let selectedFiles = [];
+    let parsedNames = [];
+
+    // --- Metni Çözümleme (Parsing) ---
+    function parseListText() {
+        const text = listInput.value;
+        const lines = text.split('\n');
+        const names = [];
+        
+        // Sadece "Sayı. Başlık" ile başlayan satırları yakala
+        const regex = /^(\d+)\.\s+(.*)$/;
+
+        for (let line of lines) {
+            line = line.trim();
+            const match = line.match(regex);
+            
+            if (match) {
+                // Dosya adında soruna yol açabilecek karakterleri temizle (\ / : * ? " < > |)
+                const safeTitle = match[2].replace(/[\\/:*?"<>|]/g, '-').trim();
+                
+                // Numarayı 3 haneli yap (001, 002... 150)
+                const num = String(match[1]).padStart(3, '0');
+                
+                names.push(`${num} - ${safeTitle}.m3u8`);
+            }
+        }
+        return names;
+    }
+
+    // Listede değişiklik yapıldığında (veya ilk açılışta)
+    listInput.addEventListener('input', () => {
+        if(selectedFiles.length > 0) updateUI();
+    });
+
+    // --- Sürükle Bırak İşlemleri ---
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    processBtn.addEventListener('click', generateZip);
+
+    // --- Mantık ---
+    function handleFiles(fileList) {
+        const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.m3u8'));
+        
+        if (files.length === 0) {
+            status.textContent = "Seçilenler arasında hiç .m3u8 dosyası bulunamadı!";
+            status.style.color = "var(--error)";
+            return;
+        }
+
+        // Değiştirilme tarihine göre sırala (Eskiden Yeniye)
+        selectedFiles = files.sort((a, b) => a.lastModified - b.lastModified);
+
+        updateUI();
+    }
+
+    function updateUI() {
+        parsedNames = parseListText();
+        
+        status.textContent = `${selectedFiles.length} dosya yüklendi. ${parsedNames.length} isim tespit edildi.`;
+        status.style.color = "var(--text-color)";
+        
+        if (selectedFiles.length !== parsedNames.length) {
+            status.textContent += ` (DİKKAT: Sayılar eşleşmiyor!)`;
+            status.style.color = "var(--error)";
+        }
+
+        preview.style.display = 'block';
+        processBtn.disabled = false;
+        
+        // Önizleme oluştur
+        const maxLimit = Math.min(selectedFiles.length, parsedNames.length);
+        let html = '';
+        
+        for (let i = 0; i < maxLimit; i++) {
+            html += `
+                <div class="preview-item">
+                    <div class="original-name" title="${selectedFiles[i].name}">${selectedFiles[i].name}</div>
+                    <div class="arrow">&rarr;</div>
+                    <div class="new-name" title="${parsedNames[i]}">${parsedNames[i]}</div>
+                </div>
+            `;
+        }
+        
+        if(selectedFiles.length > parsedNames.length) {
+            html += `<div style="color: var(--error); padding-top: 10px;">Fazladan ${selectedFiles.length - parsedNames.length} dosya var, isimlendirilemeyecek!</div>`;
+        } else if (parsedNames.length > selectedFiles.length) {
+            html += `<div style="color: var(--error); padding-top: 10px;">Fazladan ${parsedNames.length - selectedFiles.length} isim var, karşılık gelen dosya yok!</div>`;
+        }
+
+        preview.innerHTML = html;
+    }
+
+    async function generateZip() {
+        status.textContent = "ZIP dosyası hazırlanıyor... Lütfen bekleyin.";
+        status.style.color = "var(--accent)";
+        processBtn.disabled = true;
+
+        const zip = new JSZip();
+        const folder = zip.folder("isimlendirilmis_kurs_videolari");
+        
+        // Sadece eşleşebilen dosyaları ekle
+        const maxLimit = Math.min(selectedFiles.length, parsedNames.length);
+
+        for(let i=0; i < maxLimit; i++) {
+            folder.file(parsedNames[i], selectedFiles[i]);
+        }
+
+        try {
+            const content = await zip.generateAsync({type: "blob"});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = "Kurs_Videolari_M3U8.zip";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            status.textContent = "İndirme başlatıldı!";
+            status.style.color = "var(--success)";
+            processBtn.disabled = false;
+        } catch (err) {
+            console.error(err);
+            status.textContent = "ZIP dosyası oluşturulurken bir hata oluştu.";
+            status.style.color = "var(--error)";
+            processBtn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

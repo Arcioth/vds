@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3U8 Özel İsimlendirici</title>
+    <!-- JSZip Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --panel-bg: #313244;
+            --text-color: #cdd6f4;
+            --accent: #89b4fa;
+            --success: #a6e3a1;
+            --error: #f38ba8;
+            --border: #45475a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--panel-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 1.5rem; }
+        p { margin: 0; color: #a6adc8; font-size: 0.9rem; }
+
+        .panel {
+            background: #181825;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #1e1e2e;
+            color: #a6adc8;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            background-color: var(--border);
+        }
+
+        #fileInput { display: none; }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .list-preview {
+            background: #11111b;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .preview-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #313244;
+        }
+        
+        .preview-item:last-child { border-bottom: none; }
+        .arrow { color: var(--accent); font-weight: bold; }
+        .original-name { color: #f38ba8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .new-name { color: var(--success); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        button {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: var(--border); color: #a6adc8; cursor: not-allowed; }
+
+        .status-text {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>M3U8 Özel Bölüm İsimlendirici</h1>
+        <p>Dosyalarınız değiştirilme tarihine göre sıralanır ve sol taraftaki listeye göre yeniden adlandırılır.</p>
+    </div>
+
+    <div class="panel">
+        <h3>1. Bölüm Listesi</h3>
+        <textarea id="listInput" spellcheck="false">Oynat
+1. Kursu daha ucuza almak için bu videoyu izleyin
+1 dak
+Oynat
+2. Giriş
+8 dak
+
+Oynat
+3. BJT Kutuplama (Biasing)
+29 dak
+
+Oynat
+4. BJT Q Çalışma Noktası
+18 dak
+
+Oynat
+5. BJT Kutuplama Yöntemleri (Tercih Edilen ve Edilmeyen Devreler)
+12 dak
+
+Oynat
+6. Basit Kutuplama
+22 dak
+
+Oynat
+7. Gerilim Bölücü Direnç ile Kutuplama
+17 dak
+
+Oynat
+8. Klasik Kutuplama (Emiter Dejenerasyonu ile Kutuplama)
+26 dak
+
+Oynat
+9. İki Kaynaklı Kutuplama
+19 dak
+
+Oynat
+10. Geri Besleme Direnci ile Kutuplama
+20 dak
+
+Oynat
+11. BJT 'li Yükselteçlere Giriş
+13 dak
+
+Oynat
+12. Sinyali (İşareti) Nereye Uyguluyoruz, Çıkış Nereden Alınacak?
+17 dak
+
+Oynat
+13. Geçiş İletkenliği Kavramı: gm
+34 dak
+
+Oynat
+14. Giriş İşareti: Vπ
+6 dak
+
+Oynat
+15. Beyzden Bakıldığında Görülen Küçük İşaret Direnci: rπ
+7 dak
+
+Oynat
+16. Emiterden Bakıldığında Görülen Küçük İşaret Direnci: re
+10 dak
+
+Oynat
+17. Küçük İşaret Parametreleri | Örnek Soru Çözümü
+7 dak
+
+Oynat
+18. BJT 'li Yükselteçlerde Gerilim Kazancı Nasıl Hesaplanır?
+14 dak
+
+Oynat
+19. Küçük İşaret Modeli (Pi Model)
+32 dak
+
+Oynat
+20. Küçük İşaret Modeli Hazırlayalım. Örnek 1
+7 dak
+
+Oynat
+21. Küçük İşaret Modeli Hazırlayalım. Örnek 2
+10 dak
+
+Oynat
+22. Küçük İşaret Modeli Hazırlayalım. Örnek 3
+6 dak
+
+Oynat
+23. DC Analiz ve AC Model Hazırlama - Çözümlü Soru 1
+9 dak
+
+Oynat
+24. DC Analiz ve AC Model Hazırlama - Çözümlü Soru 2
+12 dak
+
+Oynat
+25. DC Analiz ve AC Model Hazırlama - Çözümlü Soru 3
+14 dak
+
+Oynat
+26. DC Analiz ve AC Model Hazırlama - Çözümlü Soru 4
+11 dak
+
+Oynat
+27. Pi model ile Küçük İşaret Analizi (DC ve AC Analiz)
+23 dak
+
+Oynat
+28. Küçük İşaret Modeli (T Model)
+11 dak
+
+Oynat
+29. T model ile Küçük İşaret Analizi (AC Analiz)
+20 dak
+
+Oynat
+30. BJT 'li Yükselteç Topolojileri
+10 dak
+
+Oynat
+31. Yükselteçlerde Giriş ve Çıkış Empedanslarının Hesaplanması
+20 dak
+
+Oynat
+32. Yükselteçlerde Empedans Hesaplama Örnek 1
+9 dak
+
+Oynat
+33. Yükselteçlerde Empedans Hesaplama Örnek 2
+7 dak
+
+Oynat
+34. Yükselteçlerde Empedans Hesaplama Örnek 3
+12 dak
+
+Oynat
+35. Ortak Emiterli Yükselteç (Common Emitter Amplifier) konu anlatımı #1
+20 dak
+
+Oynat
+36. Ortak Emiterli Yükselteç Tasarlayalım
+25 dak
+
+Oynat
+37. Ortak Emiterli Yükselteç (Common Emitter Amplifier) konu anlatımı #2
+48 dak
+
+Oynat
+38. Ortak Emiterli Yükselteç (Common Emitter Amplifier) konu anlatımı #3
+38 dak
+
+Oynat
+39. Ortak Emiterli Yükselteç (CE) Topolojisi | Soru Çözümü 1
+13 dak
+
+Oynat
+40. Ortak Emiterli Yükselteç (CE) Topolojisi | Soru Çözümü 2
+15 dak
+
+Oynat
+41. Ortak Emiterli Yükselteç (CE) Topolojisi | Soru Çözümü 3
+14 dak
+
+Oynat
+42. Kuplaj ve Bypass Kondansatörleri
+18 dak
+
+Oynat
+43. Yükselteçlerde Kapasitif Kuplajın Önemi
+10 dak
+
+Oynat
+44. Ortak Emiterli Yükselteçte Kutuplama Yöntemleri
+13 dak
+
+Oynat
+45. Ortak Emiterli Yükselteç Soru Çözümü 1 (emiteri bypass devre)
+20 dak
+
+Oynat
+46. Ortak Emiterli Yükselteç Soru Çözümü 2 (emiter dirençli devre)
+13 dak
+
+Oynat
+47. Ortak Emiterli Yükselteç Soru Çözümü 3 (feedback bağlantılı devre)
+12 dak
+
+Oynat
+48. Ortak Emiterli Yükselteç Soru Çözümü 4 (iki kaynaklı devre)
+11 dak
+
+Oynat
+49. Çok Katlı Yükselteçler: Çift Katlı Yükselteç [AC Analiz]
+19 dak
+
+Oynat
+50. Çok Katlı Yükselteçler: Kaskat Yükselteç (Cascade amplifier) [AC Analiz]
+16 dak
+
+Oynat
+51. Çok Katlı Yükselteçler: Darlington Çifti (Darlington Pair) [DC ve AC Analiz]
+31 dak
+
+Başlat
+52. Çok Katlı Yükselteçler: Kaskot Yükselteç (Cascode Amplifier) [DC ve AC Analiz]
+0 dak
+
+Oynat
+53. Ortak Beyzli Yükselteç (Common Base Amplifier) #1 konu anlatımı
+13 dak
+
+Oynat
+54. Ortak Beyzli Yükselteç (Common Base Amplifier) #2 konu anlatımı
+9 dak
+
+Oynat
+55. Ortak Beyzli Yükselteç (Common Base Amplifier) #3 konu anlatımı
+11 dak
+
+Oynat
+56. Ortak Beyzli Yükselteç (Common Base Amplifier) #4 konu anlatımı
+8 dak
+
+Oynat
+57. Ortak Beyzli Yükselteç (CB) Topolojisi | Soru Çözümü 1
+28 dak
+
+Oynat
+58. Ortak Beyzli Yükselteç (CB) Topolojisi | Soru Çözümü 2
+40 dak
+
+Oynat
+59. Ortak Beyzli Yükselteç (CB) Topolojisi | Soru Çözümü 3
+29 dak
+
+Oynat
+60. Ortak Beyzli Yükselteçte Kutuplama ve ARGE Çalışması
+44 dak
+
+Oynat
+61. Ortak Beyzli Yükselteç (Common Base Amplifier) | Soru Çözümü 1
+23 dak
+
+Oynat
+62. Ortak Beyzli Yükselteç (Common Base Amplifier) | Soru Çözümü 2
+15 dak
+
+Oynat
+63. Ortak Beyzli Yükselteç (Common Base Amplifier) | Soru Çözümü 3
+7 dak
+
+Oynat
+64. Emiter İzleyici (Emitter Follower) #1 konu anlatımı
+23 dak
+
+Oynat
+65. Emiter İzleyici (Emitter Follower) #2 konu anlatımı
+9 dak
+
+Oynat
+66. Emiter İzleyici (Emitter Follower) #3 konu anlatımı
+3 dak
+
+Oynat
+67. Emiter İzleyicide Kutuplama Nasıl Yapılmalı?
+15 dak
+
+Oynat
+68. Emiter İzleyici (Emitter Follower) Soru Çözümü 1
+19 dak
+
+Oynat
+69. 68.Emiter İzleyici (Emitter Follower) Soru Çözümü 2
+14 dak
+
+Oynat
+70. Emiter İzleyici (Emitter Follower) Soru Çözümü 3
+27 dak
+
+Oynat
+71. MOSFET 'li Yükselteçlere Giriş
+11 dak
+
+Oynat
+72. MOSFET Geçiş İletkenliği: gm
+6 dak
+
+Oynat
+73. MOSFET 'li Yükselteçlerde Gerilim Kazancı Nasıl Hesaplanır?
+6 dak
+
+Oynat
+74. MOSFET Küçük İşaret Modeli (Pİ Model)
+4 dak
+
+Oynat
+75. MOSFET Küçük İşaret Modeli (T Model)
+7 dak
+
+Oynat
+76. MOSFET Küçük İşaret Analizi Soru Çözümü 1
+4 dak
+
+Oynat
+77. MOSFET Küçük İşaret Analizi Soru Çözümü 2
+5 dak
+
+Oynat
+78. MOSFET Küçük İşaret Analizi Soru Çözümü 3
+4 dak
+
+Oynat
+79. MOSFET Küçük İşaret Analizi Soru Çözümü 4
+5 dak
+
+Oynat
+80. MOSFET Küçük İşaret Analizi Soru Çözümü 5
+6 dak
+
+Oynat
+81. MOSFET Küçük İşaret Analizi Soru Çözümü 6
+4 dak
+
+Oynat
+82. MOSFET Küçük İşaret Analizi Soru Çözümü 7
+7 dak
+
+Oynat
+83. MOSFET Küçük İşaret Analizi Soru Çözümü 8
+9 dak
+
+Oynat
+84. MOSFET Küçük İşaret Analizi Soru Çözümü 9
+5 dak
+
+Oynat
+85. MOSFET Küçük İşaret Analizi Soru Çözümü 10
+6 dak
+
+Oynat
+86. 85.MOSFET Kutuplama Yöntemleri
+3 dak
+
+Oynat
+87. 86. Basit Kutuplama
+1 dak
+
+Oynat
+88. Gerilim Bölücü Direnç ile Kutuplama
+14 dak
+
+Oynat
+89. Klasik Kutuplama
+21 dak
+
+Oynat
+90. İki Kaynaklı Kutuplama
+4 dak
+
+Oynat
+91. Geri Besleme Direnci ile Kutuplama
+6 dak
+
+Oynat
+92. MOSFET 'in Giriş ve Çıkış Empedansları
+11 dak
+
+Oynat
+93. Akım Kaynaklarının Gerçekleştirilmesi
+8 dak
+
+Oynat
+94. MOSFET 'li Yükselteç Topolojileri
+7 dak
+
+Oynat
+95. Ortak Source 'lu Yükselteç (Common Source Amplifier) konu anlatımı
+56 dak
+
+Oynat
+96. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-1
+32 dak
+
+Oynat
+97. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-2
+11 dak
+
+Oynat
+98. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-3
+6 dak
+
+Oynat
+99. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-4
+23 dak
+
+Oynat
+100. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-5
+9 dak
+
+Oynat
+101. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-6
+9 dak
+
+Oynat
+102. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-7
+12 dak
+
+Oynat
+103. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-8
+5 dak
+
+Oynat
+104. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-9
+12 dak
+
+Oynat
+105. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-10
+7 dak
+
+Oynat
+106. Ortak Source 'lu Yükselteç (Common Source Amplifier) Soru Çözümü-11
+9 dak
+
+Oynat
+107. Ortak Gate 'li Yükselteç (Common Gate Amplifier) konu anlatımı
+1 sa 1 dak
+
+Oynat
+108. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-1
+10 dak
+
+Oynat
+109. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-2
+9 dak
+
+Oynat
+110. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-3
+12 dak
+
+Oynat
+111. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-4
+12 dak
+
+Oynat
+112. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-5
+14 dak
+
+Oynat
+113. Ortak Gate 'li Yükselteç (Common Gate Amplifier) Soru Çözümü-6
+23 dak
+
+Oynat
+114. Source İzleyici (Source Follower) konu anlatımı
+28 dak
+
+Oynat
+115. Source İzleyici (Source Follower) Soru Çözümü-1
+13 dak
+
+Oynat
+116. Source İzleyici (Source Follower) Soru Çözümü-2
+13 dak
+
+Oynat
+117. Source İzleyici (Source Follower) Soru Çözümü-3
+8 dak
+
+Oynat
+118. Source İzleyici (Source Follower) Soru Çözümü-4
+7 dak
+
+Oynat
+119. Source İzleyici (Source Follower) Soru Çözümü-5</textarea>
+    </div>
+
+    <div class="panel">
+        <h3>2. M3U8 Dosyaları</h3>
+        <div class="drop-zone" id="dropZone">
+            <p><strong>.m3u8</strong> dosyalarını buraya sürükleyin<br>veya seçmek için tıklayın</p>
+            <input type="file" id="fileInput" multiple accept=".m3u8">
+        </div>
+        <div class="status-text" id="status" style="color: var(--text-color);">Henüz dosya seçilmedi.</div>
+    </div>
+
+    <div class="panel full-width">
+        <h3>3. Önizleme ve İndirme</h3>
+        <div id="preview" class="list-preview"></div>
+        <button id="processBtn" disabled>İsimlendir ve ZIP Olarak İndir</button>
+    </div>
+</div>
+
+<script>
+    const listInput = document.getElementById('listInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+    const processBtn = document.getElementById('processBtn');
+    const preview = document.getElementById('preview');
+    
+    let selectedFiles = [];
+    let parsedNames = [];
+
+    // --- Metni Çözümleme (Parsing) ---
+    function parseListText() {
+        const text = listInput.value;
+        const lines = text.split('\n');
+        const names = [];
+        
+        // Sadece "Sayı. Başlık" ile başlayan satırları yakala
+        const regex = /^(\d+)\.\s+(.*)$/;
+
+        // Yeni liste için atlanacak dosyaları temizledik. Gerekirse buraya [sayı, sayı] şeklinde ekleyebilirsin.
+        const skippedNumbers = [];
+
+        for (let line of lines) {
+            line = line.trim();
+            const match = line.match(regex);
+            
+            if (match) {
+                const numInt = parseInt(match[1], 10);
+                
+                // Eğer bu numara atlanacaklar listesindeyse, bunu isim listesine ekleme
+                if (skippedNumbers.includes(numInt)) {
+                    continue; 
+                }
+
+                // Dosya adında soruna yol açabilecek karakterleri temizle (\ / : * ? " < > |)
+                const safeTitle = match[2].replace(/[\\/:*?"<>|]/g, '-').trim();
+                
+                // Numarayı 3 haneli yap (001, 002... 119)
+                const num = String(match[1]).padStart(3, '0');
+                
+                names.push(`${num} - ${safeTitle}.m3u8`);
+            }
+        }
+        return names;
+    }
+
+    // Listede değişiklik yapıldığında (veya ilk açılışta)
+    listInput.addEventListener('input', () => {
+        if(selectedFiles.length > 0) updateUI();
+    });
+
+    // --- Sürükle Bırak İşlemleri ---
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    processBtn.addEventListener('click', generateZip);
+
+    // --- Mantık ---
+    function handleFiles(fileList) {
+        const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.m3u8'));
+        
+        if (files.length === 0) {
+            status.textContent = "Seçilenler arasında hiç .m3u8 dosyası bulunamadı!";
+            status.style.color = "var(--error)";
+            return;
+        }
+
+        // Değiştirilme tarihine göre sırala (Eskiden Yeniye)
+        selectedFiles = files.sort((a, b) => a.lastModified - b.lastModified);
+
+        updateUI();
+    }
+
+    function updateUI() {
+        parsedNames = parseListText();
+        
+        status.textContent = `${selectedFiles.length} dosya yüklendi. ${parsedNames.length} isim tespit edildi.`;
+        status.style.color = "var(--text-color)";
+        
+        if (selectedFiles.length !== parsedNames.length) {
+            status.textContent += ` (DİKKAT: Sayılar eşleşmiyor!)`;
+            status.style.color = "var(--error)";
+        }
+
+        preview.style.display = 'block';
+        processBtn.disabled = false;
+        
+        // Önizleme oluştur
+        const maxLimit = Math.min(selectedFiles.length, parsedNames.length);
+        let html = '';
+        
+        for (let i = 0; i < maxLimit; i++) {
+            html += `
+                <div class="preview-item">
+                    <div class="original-name" title="${selectedFiles[i].name}">${selectedFiles[i].name}</div>
+                    <div class="arrow">&rarr;</div>
+                    <div class="new-name" title="${parsedNames[i]}">${parsedNames[i]}</div>
+                </div>
+            `;
+        }
+        
+        if(selectedFiles.length > parsedNames.length) {
+            html += `<div style="color: var(--error); padding-top: 10px;">Fazladan ${selectedFiles.length - parsedNames.length} dosya var, isimlendirilemeyecek!</div>`;
+        } else if (parsedNames.length > selectedFiles.length) {
+            html += `<div style="color: var(--error); padding-top: 10px;">Fazladan ${parsedNames.length - selectedFiles.length} isim var, karşılık gelen dosya yok!</div>`;
+        }
+
+        preview.innerHTML = html;
+    }
+
+    async function generateZip() {
+        status.textContent = "ZIP dosyası hazırlanıyor... Lütfen bekleyin.";
+        status.style.color = "var(--accent)";
+        processBtn.disabled = true;
+
+        const zip = new JSZip();
+        const folder = zip.folder("isimlendirilmis_kurs_videolari");
+        
+        // Sadece eşleşebilen dosyaları ekle
+        const maxLimit = Math.min(selectedFiles.length, parsedNames.length);
+
+        for(let i=0; i < maxLimit; i++) {
+            folder.file(parsedNames[i], selectedFiles[i]);
+        }
+
+        try {
+            const content = await zip.generateAsync({type: "blob"});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = "Kurs_Videolari_M3U8.zip";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            status.textContent = "İndirme başlatıldı!";
+            status.style.color = "var(--success)";
+            processBtn.disabled = false;
+        } catch (err) {
+            console.error(err);
+            status.textContent = "ZIP dosyası oluşturulurken bir hata oluştu.";
+            status.style.color = "var(--error)";
+            processBtn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
